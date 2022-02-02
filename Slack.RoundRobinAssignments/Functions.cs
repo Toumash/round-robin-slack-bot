@@ -39,7 +39,7 @@ namespace Slack.RoundRobinAssignments
         [FunctionName(nameof(DailyUpdate))]
         public static async Task DailyUpdate(
             [TimerTrigger("0 0 8 * * 1-5",
-                RunOnStartup = true,
+                RunOnStartup = false,
                 UseMonitor = true)]
             TimerInfo timerInfo,
             [DurableClient] IDurableEntityClient client,
@@ -53,7 +53,9 @@ namespace Slack.RoundRobinAssignments
             }
 
             log.LogInformation($"Person for today is {state.GetPersonForToday().Name}");
-            SlackHelper.NotifySlackUsers(state.GetPersonForToday());
+            await SlackHelper.NotifySlackUsers(
+                $"👮‍♂️Today {state.GetPersonForToday().Name} is on the watch, watch out!",
+                log);
         }
 
         [FunctionName(nameof(ReceiveCommands))]
@@ -78,7 +80,7 @@ namespace Slack.RoundRobinAssignments
                             $"Skipping {state.GetPersonForToday().Name}. Next in line is: {state.WhoIsNext().Name}");
                         await SlackHelper.RespondAsASlackMessage(
                             $"Skipped {state.GetPersonForToday().Name}. Today {state.WhoIsNext().Name} is on the watch 👮‍♂️🚔",
-                            responseUrl);
+                            responseUrl, log);
                     }
                     else
                     {
@@ -87,7 +89,7 @@ namespace Slack.RoundRobinAssignments
                             $"Today {state.GetPersonForToday().Name} is on the watch 👮‍♂️🚔");
                         await SlackHelper.RespondAsASlackMessage(
                             $"Today {state.GetPersonForToday().Name} is on the watch 👮‍♂️🚔",
-                            responseUrl);
+                            responseUrl, log);
                     }
 
                     break;
@@ -99,22 +101,22 @@ namespace Slack.RoundRobinAssignments
                         var state = await ReadState<AssignmentContext>(client, GetEntityId());
                         await SlackHelper.RespondAsASlackMessage(
                             "Available options: " + string.Join(",", state.Options),
-                            responseUrl);
+                            responseUrl, log);
                         log.LogInformation($"Available Options: [{string.Join(",", state.Options)}]");
                         break;
                     }
 
                     var options = text.Split(' ').ToList();
-                    await client.SignalEntityAsync(GetEntityId(), nameof(AssignmentContext.SetOptions),options);
+                    await client.SignalEntityAsync(GetEntityId(), nameof(AssignmentContext.SetOptions), options);
                     await SlackHelper.RespondAsASlackMessage("New Options:" + string.Join(",", options),
-                        responseUrl);
+                        responseUrl, log);
                     log.LogInformation($"Set Options: [{string.Join(",", options)}]");
 
                     break;
                 }
                 case "/alerts-test":
                 {
-                    await SlackHelper.RespondAsASlackMessage("Im working, dont worry", responseUrl);
+                    await SlackHelper.RespondAsASlackMessage("Im working, dont worry", responseUrl, log);
                     break;
                 }
             }
