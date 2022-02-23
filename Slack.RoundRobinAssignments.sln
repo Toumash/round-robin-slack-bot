@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Slack.RoundRobinAssignments", "Slack.RoundRobinAssignments\Slack.RoundRobinAssignments.csproj", "{DCE6894E-C8E7-4E0E-B36D-39E295D9DD77}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Slack.RoundRobinAssignments.Tests", "Slack.RoundRobinAssignments.Tests\Slack.RoundRobinAssignments.Tests.csproj", "{5F665AD1-C291-4ECF-93DB-2E0A1CB9ABBA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{DCE6894E-C8E7-4E0E-B36D-39E295D9DD77}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DCE6894E-C8E7-4E0E-B36D-39E295D9DD77}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DCE6894E-C8E7-4E0E-B36D-39E295D9DD77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F665AD1-C291-4ECF-93DB-2E0A1CB9ABBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F665AD1-C291-4ECF-93DB-2E0A1CB9ABBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F665AD1-C291-4ECF-93DB-2E0A1CB9ABBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F665AD1-C291-4ECF-93DB-2E0A1CB9ABBA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
