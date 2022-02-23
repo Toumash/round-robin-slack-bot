@@ -128,7 +128,7 @@ public static class Functions
                     }
 
                     await SlackHelper.RespondAsASlackMessage(
-                        "Order: " + string.Join(" ", state.Options),
+                        $"Current order:{string.Join(" ", state.Options)}. Today is {state.GetPersonForToday().Name}",
                         responseUrl, log, ephemeral: true);
                     log.LogInformation($"Order: [{string.Join(" ", state.Options)}]");
                     break;
@@ -136,8 +136,9 @@ public static class Functions
 
                 var options = text.Split(' ').ToList();
                 await client.SignalEntityAsync(GetEntityId(), nameof(AssignmentContext.SetOptions), options);
-                await SlackHelper.RespondAsASlackMessage("New options:" + string.Join(" ", options),
-                    responseUrl, log);
+                await SlackHelper.RespondAsASlackMessage(
+                    $"New options: {string.Join(" ", options)}. Tomorrow is {options.First()} on watch 👮‍♂️",
+                    responseUrl, log, ephemeral: true);
                 log.LogInformation($"Set options: [{string.Join(" ", options)}]");
                 break;
             }

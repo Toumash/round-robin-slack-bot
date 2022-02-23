@@ -12,6 +12,10 @@ public static class SlackHelper
     public static async Task NotifySlackUsers(string message, ILogger log)
     {
         var slackWebhook = Environment.GetEnvironmentVariable("SLACK_WEBHOOK");
+        if (slackWebhook == null)
+        {
+            throw new ApplicationException("No slack webhook configured");
+        }
         var request = new RestRequest(slackWebhook, Method.Post);
         request.AddJsonBody(new
         {
@@ -25,6 +29,8 @@ public static class SlackHelper
     public static async Task RespondAsASlackMessage(string message, string slackTokenUrl, ILogger log,
         bool ephemeral = false)
     {
+        if (slackTokenUrl == null) return;
+
         var request = new RestRequest(slackTokenUrl, Method.Post);
         request.AddJsonBody(new
         {
