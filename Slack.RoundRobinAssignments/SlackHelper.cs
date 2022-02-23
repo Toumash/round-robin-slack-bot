@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RestSharp;
@@ -8,7 +7,7 @@ namespace Slack.RoundRobinAssignments
 {
     public static class SlackHelper
     {
-        private static readonly RestClient RestClient = new RestClient();
+        private static readonly RestClient RestClient = new();
 
         public static async Task NotifySlackUsers(string message, ILogger log)
         {
@@ -20,7 +19,7 @@ namespace Slack.RoundRobinAssignments
             });
             var response = await RestClient.ExecuteAsync(request);
             log.LogInformation(
-                $"{nameof(NotifySlackUsers)} message: {message}. Response: Success={response.IsSuccessful} HttpCode={response.StatusCode.ToString()}");
+                $"{nameof(NotifySlackUsers)} message: {message}. Response: Success={response.IsSuccessful} HttpCode={response.StatusCode}");
         }
 
         public static async Task RespondAsASlackMessage(string message, string slackTokenUrl, ILogger log)
@@ -28,12 +27,12 @@ namespace Slack.RoundRobinAssignments
             var request = new RestRequest(slackTokenUrl, Method.Post);
             request.AddJsonBody(new
             {
-                response_type = "ephemeral",
+                response_type = "in_channel",
                 text = message
             });
             var response = await RestClient.ExecuteAsync(request);
             log.LogInformation(
-                $"{nameof(NotifySlackUsers)} message: {message}. Response: Success={response.IsSuccessful} HttpCode={response.StatusCode.ToString()}");
+                $"{nameof(NotifySlackUsers)} message: {message}. Response: Success={response.IsSuccessful} HttpCode={response.StatusCode}");
         }
     }
 }
