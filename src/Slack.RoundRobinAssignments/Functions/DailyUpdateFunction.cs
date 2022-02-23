@@ -19,8 +19,10 @@ public class DailyUpdateFunction
 
     [FunctionName(nameof(DailyUpdate))]
     public async Task DailyUpdate(
-        [TimerTrigger("0 0 8 * * 1-5",
-            RunOnStartup = false,
+        [TimerTrigger("0 0 7 * * 1-5",
+#if DEBUG
+            RunOnStartup = true,
+#endif
             UseMonitor = true)]
         TimerInfo timerInfo,
         [DurableClient] IDurableEntityClient client,
