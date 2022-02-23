@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -141,6 +142,29 @@ namespace Slack.RoundRobinAssignments
             }
 
             return new OkResult();
+        }
+
+        [FunctionName(nameof(Debug))]
+        public static async Task<IActionResult> Debug(
+            [HttpTrigger(AuthorizationLevel.Function, "post")]
+            HttpRequest req,
+            [DurableClient] IDurableEntityClient client,
+            ILogger log)
+        {
+            var command = req.Form["command"].First();
+            var text = req.Form["text"].FirstOrDefault();
+            switch (command)
+            {
+                case "view": return new OkObjectResult(await ReadState<AssignmentContext>(client, GetEntityId()));
+                case "next":
+                    await client.SignalEntityAsync(GetEntityId(), nameof(AssignmentContext.Next));
+                    return new OkResult();
+                case "set":
+                    await client.SignalEntityAsync(GetEntityId(), nameof(AssignmentContext.SetOptions),
+                        text.Split(' ').ToList());
+                    return new OkResult();
+                default: return new EmptyResult();
+            }
         }
     }
 }
