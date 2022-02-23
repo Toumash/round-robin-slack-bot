@@ -8,7 +8,7 @@ namespace Slack.RoundRobinAssignments
     {
         public static async Task WaitForTheNextDay(IDurableOrchestrationContext context)
         {
-            var nextTick = context.CurrentUtcDateTime.AddSeconds(60); // TODO: change to next day
+            var nextTick = context.CurrentUtcDateTime.AddHours(24); // TODO: change to same hour each day
             await context.CreateTimer(nextTick, CancellationToken.None);
         }
 
