@@ -5,28 +5,34 @@ using RestSharp;
 
 namespace Slack.RoundRobinAssignments.Slack;
 
-public static class SlackHelper
+public class SlackMessageSender
 {
-    private static readonly RestClient RestClient = new();
+    private readonly RestClient _restClient;
+    private readonly string _webhookEndpoint;
 
-    public static async Task NotifySlackUsers(string message, ILogger log)
+    public SlackMessageSender()
     {
-        var slackWebhook = Environment.GetEnvironmentVariable("SLACK_WEBHOOK");
-        if (slackWebhook == null)
+        _restClient = new RestClient();
+        _webhookEndpoint = Environment.GetEnvironmentVariable("SLACK_WEBHOOK"); // FIXME: move to startup.cs
+        if (_webhookEndpoint == null)
         {
             throw new ApplicationException("No slack webhook configured");
         }
-        var request = new RestRequest(slackWebhook, Method.Post);
+    }
+
+    public async Task NotifySlackUsers(string message, ILogger log)
+    {
+        var request = new RestRequest(_webhookEndpoint, Method.Post);
         request.AddJsonBody(new
         {
             text = message
         });
-        var response = await RestClient.ExecuteAsync(request);
+        var response = await _restClient.ExecuteAsync(request);
         log.LogInformation(
             $"{nameof(NotifySlackUsers)} message: {message}. Response: Success={response.IsSuccessful} HttpCode={response.StatusCode}");
     }
 
-    public static async Task RespondAsASlackMessage(string message, string slackTokenUrl, ILogger log,
+    public async Task RespondAsASlackMessage(string message, string slackTokenUrl, ILogger log,
         bool ephemeral = false)
     {
         if (slackTokenUrl == null) return;
@@ -37,7 +43,7 @@ public static class SlackHelper
             response_type = ephemeral ? "ephemeral" : "in_channel",
             text = message
         });
-        var response = await RestClient.ExecuteAsync(request);
+        var response = await _restClient.ExecuteAsync(request);
         log.LogInformation(
             $"{nameof(NotifySlackUsers)} message: {message}. Response: Success={response.IsSuccessful} HttpCode={response.StatusCode}");
     }

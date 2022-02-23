@@ -24,7 +24,7 @@ public static class StatefulHelpers
     {
         // always the same, because we're gonna use it only for one customer
         // if you want to use function with multiple state, change the entityKey
-        var entityId = new EntityId(nameof(AssignmentContext), entityKey);
+        var entityId = new EntityId(nameof(Assignment), entityKey);
         return entityId;
     }
 }
