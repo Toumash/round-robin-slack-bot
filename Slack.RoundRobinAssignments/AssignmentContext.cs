@@ -13,7 +13,12 @@ namespace Slack.RoundRobinAssignments
     {
         [JsonProperty("value")] public int AssignedPersonRowId { get; set; }
 
-        [JsonProperty("options")] public List<string> Options { get; set; } = new List<string>();
+        [JsonProperty("options")] public List<string> Options { get; set; }
+
+        public AssignmentContext()
+        {
+            Options = new List<string>();
+        }
 
 
         public Assignment Next()
