@@ -11,20 +11,30 @@ using Slack.RoundRobinAssignments.Model;
 
 namespace Slack.RoundRobinAssignments.Functions;
 
-public static class DebugFunction
+public class DebugFunction
 {
+    private readonly ILogger<DebugFunction> _logger;
+
+    public DebugFunction(ILogger<DebugFunction> logger)
+    {
+        _logger = logger;
+    }
+
     [FunctionName(nameof(Debug))]
-    public static async Task<IActionResult> Debug(
+    public async Task<IActionResult> Debug(
         [HttpTrigger(AuthorizationLevel.Function, "post")]
         HttpRequest req,
-        [DurableClient] IDurableEntityClient client,
-        ILogger log)
+        [DurableClient] IDurableEntityClient client)
     {
         var command = req.Form["command"].First();
-        var text = req.Form["text"].FirstOrDefault();
+        var text = req.Form["text"].FirstOrDefault() ?? "";
+        _logger.LogDebug($"Got debug request: command: '{command}' text: '{text}'");
+
         switch (command)
         {
-            case "view": return new OkObjectResult(await StatefulHelpers.ReadState<Assignment>(client, StatefulHelpers.GetEntityId()));
+            case "view":
+                return new OkObjectResult(
+                    await client.ReadState<Assignment>(StatefulHelpers.GetEntityId()));
             case "next":
                 await client.SignalEntityAsync(StatefulHelpers.GetEntityId(), nameof(Assignment.Next));
                 return new OkResult();

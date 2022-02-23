@@ -9,9 +9,6 @@ namespace Slack.RoundRobinAssignments.Model;
 public partial class Assignment
 {
     private readonly ILogger _log;
-    [JsonProperty("value")] public int AssignedPersonRowId { get; set; }
-
-    [JsonProperty("options")] public List<string> Options { get; set; }
 
     public Assignment()
     {
@@ -21,6 +18,10 @@ public partial class Assignment
     {
         _log = log;
     }
+
+    [JsonProperty("value")] public int AssignedPersonRowId { get; set; }
+
+    [JsonProperty("options")] public List<string> Options { get; set; }
 
     public AssignmentReadModel Next()
     {
@@ -45,10 +46,7 @@ public partial class Assignment
 
     public bool SetPersonForToday(string personName)
     {
-        if (!Options.Contains(personName))
-        {
-            return false;
-        }
+        if (!Options.Contains(personName)) return false;
 
         AssignedPersonRowId = Options.IndexOf(personName);
         return true;
@@ -63,6 +61,8 @@ public partial class Assignment
     public bool SetOptions(List<string> options)
     {
         if (!options.Any()) return false;
+        if (options.Count < 2) return false;
+        
         Options = options;
         AssignedPersonRowId = 0;
         return true;

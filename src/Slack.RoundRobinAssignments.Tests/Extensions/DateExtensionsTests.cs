@@ -12,7 +12,7 @@ public class DateExtensionsTests
     {
         DateExtensions.GetNextWorkingDay(new DateTime(2022, 01, 31)).Date.ShouldBe(new DateTime(2022, 02, 01));
     }
-    
+
     [Fact]
     public void GetNextWorkingDay_GivenFriday_ShouldReturn_Monday()
     {

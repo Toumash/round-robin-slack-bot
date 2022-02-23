@@ -5,22 +5,29 @@ using RestSharp;
 
 namespace Slack.RoundRobinAssignments.Slack;
 
-public class SlackMessageSender
+public interface ISlackMessageSender
 {
+    Task NotifySlackUsers(string message);
+
+    Task RespondAsASlackMessage(string message, string slackTokenUrl,
+        bool ephemeral = false);
+}
+
+public class SlackMessageSender : ISlackMessageSender
+{
+    private readonly ILogger<SlackMessageSender> _logger;
     private readonly RestClient _restClient;
     private readonly string _webhookEndpoint;
 
-    public SlackMessageSender()
+    public SlackMessageSender(ILogger<SlackMessageSender> logger)
     {
+        _logger = logger;
         _restClient = new RestClient();
         _webhookEndpoint = Environment.GetEnvironmentVariable("SLACK_WEBHOOK"); // FIXME: move to startup.cs
-        if (_webhookEndpoint == null)
-        {
-            throw new ApplicationException("No slack webhook configured");
-        }
+        if (_webhookEndpoint == null) throw new ApplicationException("No slack webhook configured");
     }
 
-    public async Task NotifySlackUsers(string message, ILogger log)
+    public async Task NotifySlackUsers(string message)
     {
         var request = new RestRequest(_webhookEndpoint, Method.Post);
         request.AddJsonBody(new
@@ -28,11 +35,11 @@ public class SlackMessageSender
             text = message
         });
         var response = await _restClient.ExecuteAsync(request);
-        log.LogInformation(
-            $"{nameof(NotifySlackUsers)} message: {message}. Response: Success={response.IsSuccessful} HttpCode={response.StatusCode}");
+        _logger.LogInformation(
+            $"message: {message}. Response: Success={response.IsSuccessful} HttpCode={response.StatusCode}");
     }
 
-    public async Task RespondAsASlackMessage(string message, string slackTokenUrl, ILogger log,
+    public async Task RespondAsASlackMessage(string message, string slackTokenUrl,
         bool ephemeral = false)
     {
         if (slackTokenUrl == null) return;
@@ -44,7 +51,7 @@ public class SlackMessageSender
             text = message
         });
         var response = await _restClient.ExecuteAsync(request);
-        log.LogInformation(
-            $"{nameof(NotifySlackUsers)} message: {message}. Response: Success={response.IsSuccessful} HttpCode={response.StatusCode}");
+        _logger.LogInformation(
+            $"message: {message}. Response: Success={response.IsSuccessful} HttpCode={response.StatusCode}");
     }
 }

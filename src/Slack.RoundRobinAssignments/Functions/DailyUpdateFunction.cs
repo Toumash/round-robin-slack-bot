@@ -10,11 +10,13 @@ namespace Slack.RoundRobinAssignments.Functions;
 
 public class DailyUpdateFunction
 {
-    private readonly SlackMessageSender _slackMessageSender;
+    private readonly ILogger<DailyUpdateFunction> _logger;
+    private readonly ISlackMessageSender _slackMessageSender;
 
-    public DailyUpdateFunction(SlackMessageSender slackMessageSender)
+    public DailyUpdateFunction(ISlackMessageSender slackMessageSender, ILogger<DailyUpdateFunction> logger)
     {
         _slackMessageSender = slackMessageSender;
+        _logger = logger;
     }
 
     [FunctionName(nameof(DailyUpdate))]
@@ -25,22 +27,19 @@ public class DailyUpdateFunction
 #endif
             UseMonitor = true)]
         TimerInfo timerInfo,
-        [DurableClient] IDurableEntityClient client,
-        ILogger log)
+        [DurableClient] IDurableEntityClient client)
     {
-        var state = await StatefulHelpers.ReadState<Assignment>(client, StatefulHelpers.GetEntityId());
+        var state = await client.ReadState<Assignment>(StatefulHelpers.GetEntityId());
         if (state == null)
         {
-            log.LogWarning("No state created for daily update to work");
+            _logger.LogWarning("No state created for daily update to work");
             await _slackMessageSender.NotifySlackUsers(
-                $"🚨🚨🚨 Something is not configured. Error doing DailyUpdate().",
-                log);
+                "🚨🚨🚨 Something is not configured. Error doing DailyUpdate().");
             return;
         }
 
-        log.LogInformation($"Person for today is {state.GetPersonForToday().Name}");
+        _logger.LogInformation($"Person for today is {state.GetPersonForToday().Name}");
         await _slackMessageSender.NotifySlackUsers(
-            $"👮‍♂️Today {state.GetPersonForToday().Name} is on the watch, watch out!",
-            log);
+            $"👮‍♂️Today {state.GetPersonForToday().Name} is on the watch, watch out!");
     }
 }

@@ -14,7 +14,7 @@ public static class StatefulHelpers
         await context.CreateTimer(nextTick, CancellationToken.None);
     }
 
-    public static async Task<T> ReadState<T>(IDurableEntityClient client, EntityId entityId)
+    public static async Task<T> ReadState<T>(this IDurableEntityClient client, EntityId entityId)
     {
         var entityStateInfo = await client.ReadEntityStateAsync<T>(entityId);
         return entityStateInfo.EntityState;
