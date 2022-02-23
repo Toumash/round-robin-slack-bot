@@ -8,8 +8,8 @@ namespace Slack.RoundRobinAssignments
     {
         public static async Task WaitForTheNextDay(IDurableOrchestrationContext context)
         {
-            var nextCleanup = context.CurrentUtcDateTime.AddSeconds(60); // TODO: change to next day
-            await context.CreateTimer(nextCleanup, CancellationToken.None);
+            var nextTick = context.CurrentUtcDateTime.AddSeconds(60); // TODO: change to next day
+            await context.CreateTimer(nextTick, CancellationToken.None);
         }
 
         public static async Task<T> ReadState<T>(IDurableEntityClient client, EntityId entityId)

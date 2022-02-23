@@ -16,17 +16,21 @@ namespace Slack.RoundRobinAssignments
         public static async Task<IActionResult> Start(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)]
             HttpRequest req, ILogger log,
-            [DurableClient] IDurableOrchestrationClient starter)
+            [DurableClient] IDurableOrchestrationClient starter,
+            [DurableClient] IDurableEntityClient client)
         {
+            await client.SignalEntityAsync(GetEntityId(), nameof(AssignmentContext.Reset));
+            log.LogInformation($"Entity State has been reset");
+
             const string instanceId = "staticId";
-            await starter.StartNewAsync(nameof(CounterOrchestration), instanceId);
+            await starter.StartNewAsync(nameof(AssignmentOrchestration), instanceId);
             log.LogInformation($"Started with OrchestratorId= {instanceId}");
 
             return starter.CreateCheckStatusResponse(req, instanceId);
         }
 
-        [FunctionName(nameof(CounterOrchestration))]
-        public static async Task CounterOrchestration(
+        [FunctionName(nameof(AssignmentOrchestration))]
+        public static async Task AssignmentOrchestration(
             [OrchestrationTrigger] IDurableOrchestrationContext context,
             ILogger log)
         {
@@ -49,6 +53,9 @@ namespace Slack.RoundRobinAssignments
             if (state == null)
             {
                 log.LogWarning("No state created for daily update to work");
+                await SlackHelper.NotifySlackUsers(
+                    $"🚨🚨🚨 Something is not configured. Error doing DailyUpdate().",
+                    log);
                 return;
             }
 
@@ -75,6 +82,12 @@ namespace Slack.RoundRobinAssignments
                     if (text == "skip")
                     {
                         var state = await ReadState<AssignmentContext>(client, GetEntityId());
+                        if (state == null)
+                        {
+                            log.LogWarning("No state created for daily update to work");
+                            break;
+                        }
+
                         await client.SignalEntityAsync(GetEntityId(), nameof(AssignmentContext.Next));
                         log.LogInformation(
                             $"Skipping {state.GetPersonForToday().Name}. Next in line is: {state.WhoIsNext().Name}");
@@ -85,6 +98,12 @@ namespace Slack.RoundRobinAssignments
                     else
                     {
                         var state = await ReadState<AssignmentContext>(client, GetEntityId());
+                        if (state == null)
+                        {
+                            log.LogWarning("No state created for daily update to work");
+                            break;
+                        }
+
                         log.LogInformation(
                             $"Today {state.GetPersonForToday().Name} is on the watch 👮‍♂️🚔");
                         await SlackHelper.RespondAsASlackMessage(
@@ -99,24 +118,24 @@ namespace Slack.RoundRobinAssignments
                     if (string.IsNullOrWhiteSpace(text))
                     {
                         var state = await ReadState<AssignmentContext>(client, GetEntityId());
+                        if (state == null)
+                        {
+                            log.LogWarning("No state created for daily update to work");
+                            break;
+                        }
+
                         await SlackHelper.RespondAsASlackMessage(
-                            "Available options: " + string.Join(",", state.Options),
+                            "Order: " + string.Join(" ", state.Options),
                             responseUrl, log);
-                        log.LogInformation($"Available Options: [{string.Join(",", state.Options)}]");
+                        log.LogInformation($"Order: [{string.Join(" ", state.Options)}]");
                         break;
                     }
 
                     var options = text.Split(' ').ToList();
                     await client.SignalEntityAsync(GetEntityId(), nameof(AssignmentContext.SetOptions), options);
-                    await SlackHelper.RespondAsASlackMessage("New Options:" + string.Join(",", options),
+                    await SlackHelper.RespondAsASlackMessage("New options:" + string.Join(" ", options),
                         responseUrl, log);
-                    log.LogInformation($"Set Options: [{string.Join(",", options)}]");
-
-                    break;
-                }
-                case "/alerts-test":
-                {
-                    await SlackHelper.RespondAsASlackMessage("Im working, dont worry", responseUrl, log);
+                    log.LogInformation($"Set options: [{string.Join(" ", options)}]");
                     break;
                 }
             }

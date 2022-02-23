@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace Slack.RoundRobinAssignments
@@ -11,22 +12,25 @@ namespace Slack.RoundRobinAssignments
     [JsonObject(MemberSerialization.OptIn)]
     public class AssignmentContext
     {
+        private readonly ILogger _log;
         [JsonProperty("value")] public int AssignedPersonRowId { get; set; }
 
         [JsonProperty("options")] public List<string> Options { get; set; }
 
         public AssignmentContext()
         {
-            Options = new List<string>();
         }
 
+        public AssignmentContext(ILogger log)
+        {
+            _log = log;
+        }
 
         public Assignment Next()
         {
             AssignedPersonRowId++;
             if (AssignedPersonRowId >= Options.Count) AssignedPersonRowId = 0;
-
-            Console.WriteLine($"Next person: {GetPersonForToday().Name}");
+            _log.LogInformation($"State advanced one day ahead. Today's assignment is for {GetPersonForToday().Name}");
             return GetPersonForToday();
         }
 
@@ -57,6 +61,7 @@ namespace Slack.RoundRobinAssignments
         public void Reset()
         {
             AssignedPersonRowId = 0;
+            Options = new List<string>() { "Tomasz", "Karol" };
         }
 
         public bool SetOptions(List<string> options)
@@ -67,11 +72,10 @@ namespace Slack.RoundRobinAssignments
             return true;
         }
 
-
         [FunctionName(nameof(AssignmentContext))]
-        public static Task Run([EntityTrigger] IDurableEntityContext ctx)
+        public static Task Run([EntityTrigger] IDurableEntityContext ctx, ILogger log)
         {
-            return ctx.DispatchAsync<AssignmentContext>();
+            return ctx.DispatchAsync<AssignmentContext>(log);
         }
     }
 }
