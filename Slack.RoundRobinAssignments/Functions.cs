@@ -129,7 +129,7 @@ public static class Functions
 
                     await SlackHelper.RespondAsASlackMessage(
                         "Order: " + string.Join(" ", state.Options),
-                        responseUrl, log);
+                        responseUrl, log, ephemeral: true);
                     log.LogInformation($"Order: [{string.Join(" ", state.Options)}]");
                     break;
                 }

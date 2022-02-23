@@ -22,12 +22,13 @@ public static class SlackHelper
             $"{nameof(NotifySlackUsers)} message: {message}. Response: Success={response.IsSuccessful} HttpCode={response.StatusCode}");
     }
 
-    public static async Task RespondAsASlackMessage(string message, string slackTokenUrl, ILogger log)
+    public static async Task RespondAsASlackMessage(string message, string slackTokenUrl, ILogger log,
+        bool ephemeral = false)
     {
         var request = new RestRequest(slackTokenUrl, Method.Post);
         request.AddJsonBody(new
         {
-            response_type = "in_channel",
+            response_type = ephemeral ? "ephemeral" : "in_channel",
             text = message
         });
         var response = await RestClient.ExecuteAsync(request);
